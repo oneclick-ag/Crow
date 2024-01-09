@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <zlib.h>
+#include <mutex>
 
 // http://zlib.net/manual.html
 namespace crow
@@ -120,6 +121,7 @@ namespace crow
 
             ~Compressor()
             {
+                std::lock_guard<std::mutex> lck(lock_);
                 ::deflateEnd(stream_.get());
             }
 
@@ -135,6 +137,7 @@ namespace crow
 
             std::string compress(const std::string& src)
             {
+                std::lock_guard<std::mutex> lck(lock_);
                 if (reset_before_compress_)
                 {
                     ::deflateReset(stream_.get());
@@ -171,6 +174,7 @@ namespace crow
 
         private:
             std::unique_ptr<z_stream> stream_;
+            std::mutex lock_;
 
             bool reset_before_compress_;
             int window_bits_;
